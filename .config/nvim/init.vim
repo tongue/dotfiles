@@ -3,6 +3,7 @@ filetype plugin indent on
 let g:mapleader = "\<Space>"
 
 call plug#begin(stdpath('data') . '/plugged')
+Plug 'morhetz/gruvbox'
 Plug 'arzg/vim-colors-xcode'
 Plug 'junegunn/vim-peekaboo'
 Plug 'andymass/vim-matchup'
@@ -19,7 +20,6 @@ Plug 'sgur/vim-editorconfig'
 Plug 'mattn/emmet-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'scrooloose/nerdtree'
 Plug 'kshenoy/vim-signature'
 Plug 'sheerun/vim-polyglot'
 Plug 'airblade/vim-gitgutter'
@@ -28,104 +28,9 @@ Plug 'chrisbra/Colorizer'
 Plug 'neovim/nvim-lsp'
 Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-lua/diagnostic-nvim'
+Plug 'dense-analysis/ale'
+Plug 'mcchrish/nnn.vim'
 call plug#end()
-
-" LSP ==============================================================
-lua << EOF
-local nvim_lsp = require'nvim_lsp'
-nvim_lsp.tsserver.setup{}
-nvim_lsp.html.setup{}
-nvim_lsp.cssls.setup{}
-nvim_lsp.jsonls.setup{}
-EOF
-
-" Set completeopt to have a better completion experience
-set completeopt=menuone,noinsert,noselect
-
-" Avoid showing message extra message when using completion
-set shortmess+=c
-
-" Dont autoshow popup
-let g:completion_enable_auto_popup = 0
-
-" map <c-p> to manually trigger completion
-inoremap <silent><expr> <c-p> completion#trigger_completion()
-
-" AUTOCMD ==========================================================
-
-" Trigger autoread when changing buffers or coming back to vim.
-au FocusGained,BufEnter * :silent! !
-
-" Use completion-nvim in every buffer
-autocmd BufEnter * lua require'completion'.on_attach()
-autocmd BufEnter * lua require'diagnostic'.on_attach()
-
-" FZF ================================================================
-let g:fzf_layout = { 'up': '100%' }
-
-function! s:fzf_ag_raw(cmd)
-  call fzf#vim#ag_raw(a:cmd)
-endfunction
-
-" DELIMITMATE ========================================================
-let delimitMate_expand_cr = 2
-let delimitMate_expand_space = 1 " {|} => { | }
-
-" UNDOTREE ===========================================================
-set undofile
-" Auto create undodir if not exists
-let undodir = expand($HOME . '/.config/nvim/cache/undodir')
-if !isdirectory(undodir)
-	call mkdir(undodir, 'p')
-endif
-let &undodir = undodir
-
-" NERDTREE ===========================================================
-let NERDTreeMinimalUI=1
-let NERDTreeShowHidden=1
-let NERDTreeHijackNetrw=1
-
-" CTRLSF ===========================================================
-let g:ctrlsf_default_root = 'project'
-let g:ctrlsf_populate_qflist = 1
-
-" JSX ==============================================================
-let g:jsx_ext_required = 0
-
-" MATCHUP ==========================================================
-let g:matchup_matchparen_enabled = 0
-
-" MAPPINGS =========================================================
-nnoremap <Leader>gb :Gblame<CR>
-nnoremap <Leader>gs :Gstatus<CR>
-nnoremap <Leader>gd :Gdiff<CR>
-
-nnoremap <leader>w :w<CR>
-
-nnoremap <Leader>v `[v`]
-
-nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
-nnoremap <leader>p :w<CR>:Prettier<CR>:w<CR><Esc>
-
-nnoremap <BS><BS> :only<CR>
-
-nnoremap <leader>o :GFiles<CR>
-nnoremap <leader>e :Buffers<CR>
-nnoremap <leader>i :Files<CR>
-nnoremap <leader>u :Ag<CR>
-
-silent! map <Leader>1 :NERDTreeToggle<CR>
-silent! map <Leader>2 :NERDTreeFind<CR>
-
-nmap <silent> <Up> <Plug>(ale_previous_wrap)
-nmap <silent> <Down> <Plug>(ale_next_wrap)
-
-nnoremap <Leader>0 :UndotreeToggle<CR>
-
-nmap <Leader>ff <Plug>CtrlSFPrompt
-vmap <Leader>ff <Plug>CtrlSFPromptExec
-nnoremap <Leader>ft :CtrlSFToggle<CR>
-inoremap <Leader>ft <Esc>:CtrlSFToggle<CR>
 
 " SETTINGS =========================================================
 syntax on
@@ -168,8 +73,116 @@ set gdefault
 set background=dark
 set termguicolors
 set cursorline
-colorscheme xcodedarkhc
+let g:gruvbox_contrast_dark = "soft"
+colorscheme gruvbox
 
+" LSP ==============================================================
+lua << EOF
+local nvim_lsp = require'nvim_lsp'
+nvim_lsp.tsserver.setup{}
+nvim_lsp.html.setup{}
+nvim_lsp.cssls.setup{}
+nvim_lsp.jsonls.setup{}
+EOF
+
+" Set completeopt to have a better completion experience
+set completeopt=menuone,noinsert,noselect
+
+" Avoid showing message extra message when using completion
+set shortmess+=c
+
+let g:completion_enable_auto_popup = 1
+let g:diagnostic_enable_virtual_text = 1
+
+" map <c-p> to manually trigger completion
+inoremap <silent><expr> <c-p> completion#trigger_completion()
+
+" ALE
+let g:ale_fixers = {'javascript': ['prettier', 'eslint'], 'typescript': ['prettier', 'tslint'], 'css': ['prettier'], 'json': ['prettier'], 'html': ['prettier']}
+let g:ale_fix_on_save = 1
+
+let g:ctrlsf_ackprg = 'ag'
+
+" AUTOCMD ==========================================================
+
+" Trigger autoread when changing buffers or coming back to vim.
+au FocusGained,BufEnter * :silent! !
+
+" Use completion-nvim in every buffer
+autocmd BufEnter * lua require'completion'.on_attach()
+autocmd BufEnter * lua require'diagnostic'.on_attach()
+
+" FZF ================================================================
+let g:fzf_layout = { 'up': '100%' }
+
+function! s:fzf_ag_raw(cmd)
+  call fzf#vim#ag_raw(a:cmd)
+endfunction
+
+" DELIMITMATE ========================================================
+let delimitMate_expand_cr = 2
+let delimitMate_expand_space = 1 " {|} => { | }
+
+" UNDOTREE ===========================================================
+set undofile
+" Auto create undodir if not exists
+let undodir = expand($HOME . '/.config/nvim/cache/undodir')
+if !isdirectory(undodir)
+	call mkdir(undodir, 'p')
+endif
+let &undodir = undodir
+
+" CTRLSF ===========================================================
+let g:ctrlsf_default_root = 'project'
+let g:ctrlsf_populate_qflist = 1
+
+" JSX ==============================================================
+let g:jsx_ext_required = 0
+
+" MATCHUP ==========================================================
+let g:matchup_matchparen_enabled = 0
+
+" NNN ==============================================================
+" Floating window (neovim latest and vim with patch 8.2.191)
+let g:nnn#layout = { 'window': { 'width': 0.9, 'height': 0.6, 'highlight': 'Debug' } }
+let g:nnn#action = {
+      \ '<c-x>': 'split',
+      \ '<c-v>': 'vsplit' }
+let g:nnn#replace_netrw = 1
+
+" MAPPINGS =========================================================
+nnoremap <Leader>gb :Gblame<CR>
+nnoremap <Leader>gs :Gstatus<CR>
+nnoremap <Leader>gd :Gdiff<CR>
+
+nnoremap <leader>w :w<CR>
+
+nnoremap <Leader>v `[v`]
+
+nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
+nnoremap <leader>p :w<CR>:Prettier<CR>:w<CR><Esc>
+
+nnoremap <BS><BS> :only<CR>
+
+nnoremap <leader>o :GFiles<CR>
+nnoremap <leader>e :Buffers<CR>
+nnoremap <leader>i :Files<CR>
+nnoremap <leader>u :Ag<CR>
+
+nnoremap <silent> <Leader>1 :NnnPicker<CR>
+nnoremap <silent> <Leader>2 :NnnPicker '%:p:h'<CR>
+
+nmap <silent> <Up> <Plug>(ale_previous_wrap)
+nmap <silent> <Down> <Plug>(ale_next_wrap)
+
+nnoremap <Leader>0 :UndotreeToggle<CR>
+
+nmap <Leader>ff <Plug>CtrlSFPrompt
+vmap <Leader>ff <Plug>CtrlSFPromptExec
+nnoremap <Leader>ft :CtrlSFToggle<CR>
+inoremap <Leader>ft <Esc>:CtrlSFToggle<CR>
+
+" STATUSLINE ======================================================
 function! Current_git_branch()
 	let l:branch = split(fugitive#statusline(),'[()]')
 	if len(l:branch) > 1
@@ -178,7 +191,6 @@ function! Current_git_branch()
 	return ""
 endfunction
 
-" STATUSLINE ======================================================
 set statusline=
 set statusline+=%#PmenuSel#
 set statusline+=\ 
