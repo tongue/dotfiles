@@ -30,6 +30,7 @@ Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-lua/diagnostic-nvim'
 Plug 'dense-analysis/ale'
 Plug 'mcchrish/nnn.vim'
+Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
 " SETTINGS =========================================================
@@ -73,8 +74,8 @@ set gdefault
 set background=dark
 set termguicolors
 set cursorline
-let g:gruvbox_contrast_dark = "soft"
-colorscheme gruvbox
+" let g:gruvbox_contrast_dark = "soft"
+colorscheme xcodedarkhc
 
 " LSP ==============================================================
 lua << EOF
@@ -83,6 +84,17 @@ nvim_lsp.tsserver.setup{}
 nvim_lsp.html.setup{}
 nvim_lsp.cssls.setup{}
 nvim_lsp.jsonls.setup{}
+
+require'nvim-treesitter.configs'.setup {
+  highlight = {
+    enable = true,
+    use_languagetree = false, -- Use this to enable language injection (this is very unstable)
+    custom_captures = {
+      -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+      ["foo.bar"] = "Identifier",
+    },
+  },
+}
 EOF
 
 " Set completeopt to have a better completion experience
@@ -93,12 +105,22 @@ set shortmess+=c
 
 let g:completion_enable_auto_popup = 1
 let g:diagnostic_enable_virtual_text = 1
+let g:diagnostic_enable_underline = 0
+
+nnoremap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <silent> gD <cmd>lua vim.lsp.buf.implementation()<CR>
+nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+nnoremap <silent> 1gD <cmd>lua vim.lsp.buf.type_definition()<CR>
+nnoremap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
+nnoremap <silent> g0 <cmd>lua vim.lsp.buf.document_symbol()<CR>
+nnoremap <silent> gW <cmd>lua vim.lsp.buf.workspace_symbol()<C
 
 " map <c-p> to manually trigger completion
 inoremap <silent><expr> <c-p> completion#trigger_completion()
 
 " ALE
-let g:ale_fixers = {'javascript': ['prettier', 'eslint'], 'typescript': ['prettier', 'tslint'], 'css': ['prettier'], 'json': ['prettier'], 'html': ['prettier']}
+let g:ale_fixers = {'elm': ['elm-format'], 'javascript': ['prettier', 'eslint'], 'typescriptreact': ['prettier', 'tslint'], 'typescript': ['prettier', 'tslint'], 'css': ['prettier'], 'json': ['prettier'], 'html': ['prettier']}
 let g:ale_fix_on_save = 1
 
 let g:ctrlsf_ackprg = 'ag'
@@ -172,8 +194,8 @@ nnoremap <leader>u :Ag<CR>
 nnoremap <silent> <Leader>1 :NnnPicker<CR>
 nnoremap <silent> <Leader>2 :NnnPicker '%:p:h'<CR>
 
-nmap <silent> <Up> <Plug>(ale_previous_wrap)
-nmap <silent> <Down> <Plug>(ale_next_wrap)
+nmap <silent> <Up> :PrevDiagnosticCycle<CR>
+nmap <silent> <Down> :NextDiagnosticCycle<CR>
 
 nnoremap <Leader>0 :UndotreeToggle<CR>
 
