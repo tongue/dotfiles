@@ -31,6 +31,8 @@ Plug 'nvim-lua/diagnostic-nvim'
 Plug 'dense-analysis/ale'
 Plug 'mcchrish/nnn.vim'
 Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-treesitter/completion-treesitter'
+Plug 'vimwiki/vimwiki'
 call plug#end()
 
 " SETTINGS =========================================================
@@ -74,25 +76,39 @@ set gdefault
 set background=dark
 set termguicolors
 set cursorline
-" let g:gruvbox_contrast_dark = "soft"
-colorscheme xcodedarkhc
+let g:gruvbox_contrast_dark = "soft"
+colorscheme gruvbox
 
 " LSP ==============================================================
 lua << EOF
 local nvim_lsp = require'nvim_lsp'
-nvim_lsp.tsserver.setup{}
-nvim_lsp.html.setup{}
-nvim_lsp.cssls.setup{}
-nvim_lsp.jsonls.setup{}
+local lsp_completion = require'completion'
+local lsp_diagnostic = require'diagnostic'
+
+local on_attach_vim = function(client)
+	lsp_completion.on_attach(client)
+	lsp_diagnostic.on_attach(client)
+end
+
+nvim_lsp.tsserver.setup{
+	on_attach=on_attach_vim,
+}
+nvim_lsp.elmls.setup{
+	on_attach=on_attach_vim,
+}
+nvim_lsp.html.setup{
+	on_attach=on_attach_vim,
+}
+nvim_lsp.cssls.setup{
+	on_attach=on_attach_vim,
+}
+nvim_lsp.jsonls.setup{
+	on_attach=on_attach_vim,
+}
 
 require'nvim-treesitter.configs'.setup {
   highlight = {
     enable = true,
-    use_languagetree = false, -- Use this to enable language injection (this is very unstable)
-    custom_captures = {
-      -- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-      ["foo.bar"] = "Identifier",
-    },
   },
 }
 EOF
@@ -105,7 +121,8 @@ set shortmess+=c
 
 let g:completion_enable_auto_popup = 1
 let g:diagnostic_enable_virtual_text = 1
-let g:diagnostic_enable_underline = 0
+let g:diagnostic_enable_underline = 1
+let g:diagnostic_level = "Hint"
 
 nnoremap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
 nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
@@ -129,10 +146,6 @@ let g:ctrlsf_ackprg = 'ag'
 
 " Trigger autoread when changing buffers or coming back to vim.
 au FocusGained,BufEnter * :silent! !
-
-" Use completion-nvim in every buffer
-autocmd BufEnter * lua require'completion'.on_attach()
-autocmd BufEnter * lua require'diagnostic'.on_attach()
 
 " FZF ================================================================
 let g:fzf_layout = { 'up': '100%' }
@@ -172,6 +185,10 @@ let g:nnn#action = {
       \ '<c-v>': 'vsplit' }
 let g:nnn#replace_netrw = 1
 
+" VIMWIKI =========================================================
+let g:vimwiki_list = [{'path': '~/vimwiki/',
+                      \ 'syntax': 'markdown', 'ext': '.md'}]
+
 " MAPPINGS =========================================================
 nnoremap <Leader>gb :Gblame<CR>
 nnoremap <Leader>gs :Gstatus<CR>
@@ -192,7 +209,7 @@ nnoremap <leader>i :Files<CR>
 nnoremap <leader>u :Ag<CR>
 
 nnoremap <silent> <Leader>1 :NnnPicker<CR>
-nnoremap <silent> <Leader>2 :NnnPicker '%:p:h'<CR>
+nnoremap <silent> <Leader>2 :NnnPicker %:p:h<CR>
 
 nmap <silent> <Up> :PrevDiagnosticCycle<CR>
 nmap <silent> <Down> :NextDiagnosticCycle<CR>
